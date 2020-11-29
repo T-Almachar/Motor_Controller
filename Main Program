@@ -1,0 +1,165 @@
+//LCD init
+
+#include <LiquidCrystal.h>
+// Create an LCD object. Parameters: (RS, E, D4, D5, D6, D7):
+LiquidCrystal lcd = LiquidCrystal(2, 3, 4, 5, 6, 7);
+
+//Motor Init
+
+#define ENABLE 13
+#define DIRA 12
+#define DIRB 11
+#define Dir 9
+#define Spd 8
+int i, x, y;
+
+//timer Init
+
+#include <Wire.h>
+#include <DS3231.h>
+
+DS3231 clock;
+RTCDateTime dt;
+
+
+void setup() {
+  //---set pin direction
+  x = 0;
+  y = 0;
+  pinMode(ENABLE, OUTPUT);
+  pinMode(DIRA, OUTPUT);
+  pinMode(DIRB, OUTPUT);
+  pinMode(Dir, INPUT);
+  pinMode(Spd, INPUT);
+  Serial.begin(9600);
+
+  //Clock Setup
+  clock.begin();
+  // Set sketch compiling time
+  clock.setDateTime(__DATE__, __TIME__);
+
+  //LCD Setup
+  // Specify the LCD's number of columns and rows. Change to (20, 4) for a 20x4 LCD:
+  lcd.begin(16, 2);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print ("TIME DIR:       ");
+  lcd.setCursor(0, 1);
+  lcd.print ("  :  :   SPD:   ");
+}
+
+void loop() {
+
+
+  //Speed Control
+  if (digitalRead(Spd) == LOW) {
+    x = x + 1;
+    x = x % 4;
+    delay(200);
+    Serial.print(x);
+  }
+  else {
+
+  }
+
+
+  switch (x)
+  {
+    case (0):
+      analogWrite(ENABLE, 0);
+      lcd.setCursor(13, 1);
+      lcd.print("0.0");
+      break;
+
+    case (1):
+      analogWrite(ENABLE, 128);
+      lcd.setCursor(13, 1);
+      lcd.print("0.5");
+      break;
+
+    case (2):
+      analogWrite(ENABLE, 192);
+      lcd.setCursor(13, 1);
+      lcd.print(".75");
+      break;
+
+    case (3):
+      analogWrite(ENABLE, 255);
+      lcd.setCursor(13, 1);
+      lcd.print("1.0");
+      break;
+
+    default:
+      break;
+  }
+
+
+
+
+
+  //Direction Control
+  if (digitalRead(Dir) == LOW)
+  {
+    y = y + 1;
+    y = y % 2;
+    delay(200);
+    Serial.print(y);
+  }
+  else {
+
+  }
+
+  switch (y)
+  {
+    case (0):
+      digitalWrite(DIRA, HIGH);
+      digitalWrite(DIRB, LOW);
+      lcd.setCursor(9, 0);
+      lcd.print("Forward");
+      break;
+    case (1):
+      digitalWrite(DIRA, LOW);
+      digitalWrite(DIRB, HIGH);
+      lcd.setCursor(9, 0);
+      lcd.print("Reverse");
+      break;
+
+    default:
+      break;
+
+  }
+
+
+  //Clock portion
+  dt = clock.getDateTime();
+  lcd.setCursor(0, 1);
+  lcd.print(dt.hour);
+
+  if (dt.minute < 10) {
+    lcd.setCursor(3, 1);
+    lcd.print("0");
+    lcd.setCursor(4, 1);
+    lcd.print(dt.minute);
+  }
+  else {
+    lcd.setCursor(3, 1);
+    lcd.print(dt.minute);
+  }
+
+  if (dt.second < 10) {
+    lcd.setCursor(6, 1);
+    lcd.print("0");
+    lcd.setCursor(7, 1);
+    lcd.print(dt.second);
+  }
+  else {
+    lcd.setCursor(6, 1);
+    lcd.print(dt.second);
+  }
+
+
+
+
+
+
+}
